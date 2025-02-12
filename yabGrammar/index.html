@@ -17,29 +17,30 @@
                 <div id="editor"></div>
                 <div id="autocomplete"></div>
                 <script>
+                        console.log("check")
                         var quill = new Quill('#editor',
                             {
                                     theme: 'snow'
                             }
                         );
-                        function getLatWords(text, wordCount = 5){
+                        function getLastWords(text, wordCount = text.size){
                                 let words = text.trim().split(/\s+/);
                                 return words.slice(-wordCount).join(" ");
                         }
                         quill.on('text-change', function(){
                             let text = quill.getText();
-                            let lastWords = getLastWords(text);
-                            if(lastWords.length < 3) return;
-                            fetch("https://127.0.0.1:5000/autocomplete",{
+                           
+                        
+                            fetch("http://127.0.0.1:5000/autocomplete",{
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({text: lastWords})
+                                body: JSON.stringify({text: text})
 
                             })
                             .then(response => response.json())
                             .then( data =>{
-                            document.getElementById("autocmplete").innerText = data.completion;
-                        });
+                            document.getElementById("autocomplete").innerText = data.completion;
+                        }).catch(error => console.error("Error", error));
                         } );
                 </script>
     </body>
