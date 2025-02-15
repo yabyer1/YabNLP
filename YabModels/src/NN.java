@@ -11,6 +11,7 @@ public class NN{
     double [] output = new double[10]; // we will be classifying numbers 0 - 9
     double [][] outputWeights;
     double[] outputBias = new double[10];
+    double [] expected = new double [10];
     public NN(int inputSize, int numHiddenLayers, int dimensionHiddenLayers){
         input = new double[inputSize];
         inputWeights = new double[inputSize];
@@ -38,13 +39,14 @@ public class NN{
                 }
 
     }
-   void newImage(double [][] newImage){
+   void newImage(double [][] newImage, int lbl){
             for(int i = 0; i < newImage.length; i++) {
                 for (int j = 0; j < newImage[0].length; j++) {
                     input[i * newImage[0].length + j] = newImage[i][j];
 
                 }
             }
+            expected[lbl] = 1;
    }
     
     
@@ -95,6 +97,60 @@ public class NN{
     private double RELU(double v) {
         return Math.max(0, v);
     }
+    private void backward(double learningrate){
+      double [] costGradient = new double[10];
+      for(int i = 0; i < costGradient.length; i++){
+          costGradient[i] = output[i] - expected[i];
+      }
+       double [] gradient  = new double[hiddenLayers.getLast().length];
+       for(int i = 0; i < gradient.length; i++){
 
+           double reluDiv = (hiddenLayers.getLast()[i] > 0) ? 1 : 0;
+           gradient[i] = 0;
+           for(int j = 0; j < 10; j++){
+
+                gradient[i] += (costGradient[j] * outputWeights[j][i]) * reluDiv;
+           }
+
+       }
+       double[] prevGrads;
+       prevGrads = gradient;
+       double [] prevActivations = hiddenLayers.getLast(); // last hidden layer needed to step update output layer
+       for(int i = 0; i < 10; i++){
+           for(int j = 0; j < prevActivations.length; j++){
+               outputWeights[i][j] = outputWeights[i][j] - (learningrate * costGradient[i] * prevActivations[j]);
+           }
+           outputBias[i] -= learningrate * costGradient[i];
+       }
+       double [] layerbeforelast = (hiddenLayers.size() > 1) ? hiddenLayers.get(hiddenLayers.size() - 2) : input;
+
+       for(int i = 0; i < prevActivations.length; i++){
+           for(int j = 0; j < layerbeforelast.length; j++){
+               hiddenLayerWeights.getLast()[i][j] = hiddenLayerWeights.getLast()[i][j] -  ( learningrate * gradient[i] * layerbeforelast[j]);
+           }
+           bias.getLast()[i] = bias.getLast()[i] - (learningrate * gradient[i]);
+       }
+            for(int i = hiddenLayers.size() - 2; i > -1; i--){
+                double [] curLayerGradient = new double[hiddenLayers.get(i).length];
+                for(int j = 0; j < curLayerGradient.length; j++){
+                    double reluDiv = (hiddenLayers.get(i)[j] > 0) ? 1 : 0;
+                    curLayerGradient[j] = 0;
+                    for(int k = 0; k < hiddenLayers.get(i + 1).length; k++){
+                        curLayerGradient[j] += (prevGrads[k] * hiddenLayerWeights.get(i + 1)[k][j]) * reluDiv;
+                    }
+                }
+                prevGrads = curLayerGradient;
+                double [] lbl = (i > 0) ? hiddenLayers.get(i - 1) : input;
+                for(int j = 0; j < curLayerGradient.length; j++){
+                    for(int k = 0; k < lbl.length; k++){
+                        hiddenLayerWeights.get(i)[j][k] = hiddenLayerWeights.get(i)[j][k] - (learningrate * curLayerGradient[j] * lbl[k]);
+                    }
+                    bias.get(i)[j] = bias.get(i)[j] - (learningrate * curLayerGradient[j]);
+                }
+            }
+
+
+
+    }
 
 }

@@ -23,7 +23,7 @@
                                     theme: 'snow'
                             }
                         );
-                        function getLastWords(text, wordCount = text.size){
+                        function getLastWords(text, wordCount = text.length){
                                 let words = text.trim().split(/\s+/);
                                 return words.slice(-wordCount).join(" ");
                         }
